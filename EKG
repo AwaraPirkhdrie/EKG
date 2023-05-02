@@ -1,0 +1,29 @@
+/****************************************************************
+EKG.ino
+*****************************************************************/
+ #define DETECTION_LO_MINUS 10 //pin with detection LO -
+ #define DETECTION_LO_PLUSE 11 //pin with detection LO + 
+ #define VALUE_ANALOG_INPUT A0 //pin with ANALOG_INPUT
+ #define BUZZER_PIN 4 //Arduino pin connected to Buzzer's pin 
+
+void setup() {
+  // initialize the serial communication:
+  Serial.begin(9600);
+  pinMode(DETECTION_LO_MINUS, INPUT); // Setup for leads off detection LO +
+  pinMode(DETECTION_LO_PLUSE, INPUT); // Setup for leads off detection LO -
+ 
+}
+ 
+void loop() {
+  
+  if((digitalRead(DETECTION_LO_MINUS) == 1)||(digitalRead(DETECTION_LO_PLUSE) == 1)){
+    digitalWrite(BUZZER_PIN, HIGH); // turn on
+    Serial.println('!');
+  }
+  else{
+      Serial.println(analogRead(VALUE_ANALOG_INPUT));
+          digitalWrite(BUZZER_PIN, LOW);  // turn off
+  }
+  //Add a delay to prevent the serial data from becoming saturated.
+  delay(1);
+}
