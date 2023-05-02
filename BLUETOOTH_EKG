@@ -1,0 +1,53 @@
+/****************************************************************
+BLUETOOTH_EKG.ino
+*****************************************************************/
+#include "BluetoothSerial.h" 
+#define LED_BUILTIN 2 //Attach an LED to a pin so that it illuminates when a Bluetooth connection is established. 
+#define DETECTION_LO_MINUS 10 //pin with detection LO -
+#define DETECTION_LO_PLUSE 11 //pin with detection LO + 
+#define VALUE_ANALOG_INPUT A0 //pin with ANALOG_INPUT
+
+BluetoothSerial ESP_BT; // Object for Bluetooth
+boolean BT_cnx = false; 
+void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
+  if(event == ESP_SPP_SRV_OPEN_EVT){
+    Serial.println("Client has been successfully connected.");
+    digitalWrite(LED_BUILTIN, HIGH);
+    BT_cnx = true;
+  } 
+  if(event == ESP_SPP_CLOSE_EVT ){
+    Serial.println("Client has been disconnected.");
+    digitalWrite(LED_BUILTIN, LOW);
+    BT_cnx = false;
+    ESP.restart();
+  }
+} 
+void setup() {
+  // initialize digital pin 2 as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+  // initialize the serial communication:
+  Serial.begin(9600);
+  Serial.println(); // blank line in serial ...
+  pinMode(DETECTION_LO_PLUSE, INPUT); // Setup for leads off detection LO +
+  pinMode(DETECTION_LO_MINUS, INPUT); // Setup for leads off detection LO -
+  ESP_BT.register_callback(callback);
+  if(!ESP_BT.begin("ESP32_ECG")){
+    Serial.println("An error occurred initializing Bluetooth");
+  }else{
+    Serial.println("Bluetooth initialized... Bluetooth Device is Ready to Pair...");
+  }
+} 
+void loop() {
+  if((digitalRead(DETECTION_LO_MINUS) == 1)||(digitalRead(DETECTION_LO_PLUSE) == 1)){
+    Serial.println('!');
+    ESP_BT.println('!');
+  }
+  else{
+    // send the value of analog input 0 to serial:
+    Serial.println(analogRead(VALUE_ANALOG_INPUT));
+    //Do the same for blutooth
+    if(BT_cnx){
+      ESP_BT.print('E');
+      ESP_BT.println(analogRead(VALUE_ANALOG_INPUT));
+    } 
+  }
